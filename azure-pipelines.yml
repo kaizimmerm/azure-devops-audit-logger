@@ -1,0 +1,70 @@
+#
+# Copyright © 2020 Kai Zimmermann (kaizimmerm.com)
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+pool:
+  vmImage: "ubuntu-20.04"
+
+parameters:
+  - name: functionResourceGroup
+    default: kaizimmerm
+    type: string
+  - name: functionName
+    default: azure-devops-audit-logger
+    type: string
+
+variables:
+  - name: mavenCacheFolder
+    value: $(Pipeline.Workspace)/.m2/repository
+  - name: mavenCacheOpts
+    value: '-Dmaven.repo.local=$(mavenCacheFolder)'
+
+steps:
+  - task: SonarCloudPrepare@1
+    displayName: 'Prepare analysis configuration'
+    inputs:
+      SonarCloud: 'SonarCloudKaizimmerm'
+      organization: 'kaizimmerm'
+      scannerMode: Other
+  - task: Cache@2
+    displayName: Cache Maven local repo
+    inputs:
+      key: 'maven | **/pom.xml'
+      path: $(mavenCacheFolder)    
+  - task: Maven@3
+    displayName: 'Maven package'
+    inputs:
+      mavenPomFile: "pom.xml"
+      mavenOptions: "-Xmx3072m"
+      javaHomeOption: "JDKVersion"
+      jdkVersionOption: "1.11"
+      jdkArchitectureOption: "x64"
+      publishJUnitResults: true
+      sonarQubeRunAnalysis: true
+      sqMavenPluginVersionChoice: 'latest'
+      testResultsFiles: "**/surefire-reports/TEST-*.xml"
+      goals: "package $(mavenCacheOpts)"
+  - task: AzureFunctionApp@1
+    displayName: 'Deploy function'
+    inputs:
+      azureSubscription: 'AzureKaizimmerm'
+      appType: functionAppLinux      
+      resourceGroupName: ${{ parameters.functionResourceGroup }}
+      appName: ${{ parameters.functionName }}
+      package: $(System.DefaultWorkingDirectory)/target/azure-functions/${{ parameters.functionName }}
+  - task: SonarCloudPublish@1
+    displayName: 'Publish results on build summary'
+    inputs:
+      pollingTimeoutSec: '300'
