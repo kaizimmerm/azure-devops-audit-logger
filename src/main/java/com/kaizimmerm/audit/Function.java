@@ -46,4 +46,17 @@ public class Function {
     return request.createResponseBuilder(HttpStatus.OK).build();
   }
 
+  @FunctionName("workitems")
+  public HttpResponseMessage workitems(@HttpTrigger(name = "request",
+      methods = {HttpMethod.POST},
+      authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
+      final ExecutionContext context,
+      @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "workitems",
+          connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
+
+    request.getBody().ifPresent(document::setValue);
+
+    return request.createResponseBuilder(HttpStatus.OK).build();
+  }
+
 }
