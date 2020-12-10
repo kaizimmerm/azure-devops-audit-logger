@@ -16,6 +16,7 @@
 
 package com.kaizimmerm.audit;
 
+import java.util.Optional;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
@@ -26,7 +27,6 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.CosmosDBOutput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
-import java.util.Optional;
 
 /**
  * Azure Functions with HTTP Trigger.
@@ -41,20 +41,26 @@ public class Function {
       @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "pullrequests",
           connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
 
-    request.getBody().ifPresent(document::setValue);
+    request.getBody().ifPresent(body -> {
+      context.getLogger().info(body);
+      document.setValue(body);
+    });
 
     return request.createResponseBuilder(HttpStatus.OK).build();
   }
 
   @FunctionName("workitems")
-  public HttpResponseMessage workitems(@HttpTrigger(name = "request",
-      methods = {HttpMethod.POST},
+  public HttpResponseMessage workitems(@HttpTrigger(name = "request", methods = {HttpMethod.POST},
       authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context,
       @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "workitems",
           connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
 
-    request.getBody().ifPresent(document::setValue);
+
+    request.getBody().ifPresent(body -> {
+      context.getLogger().info(body);
+      document.setValue(body);
+    });
 
     return request.createResponseBuilder(HttpStatus.OK).build();
   }
