@@ -14,33 +14,36 @@
  * limitations under the License.
  */
 
-package com.kaizimmerm.git;
+package com.kaizimmerm.audit;
 
-import java.util.Optional;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
+import com.microsoft.azure.functions.OutputBinding;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.CosmosDBOutput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
+import java.util.Optional;
 
 /**
  * Azure Functions with HTTP Trigger.
  */
 public class Function {
 
-  @FunctionName("events")
-  public HttpResponseMessage run(@HttpTrigger(name = "req",
-      methods = {HttpMethod.GET, HttpMethod.POST},
-      authLevel = AuthorizationLevel.ANONYMOUS) final HttpRequestMessage<Optional<String>> request,
-      final ExecutionContext context) {
-    context.getLogger().info("Java HTTP trigger processed a request.");
+  @FunctionName("pullrequests")
+  public HttpResponseMessage pullrequests(@HttpTrigger(name = "request",
+      methods = {HttpMethod.POST},
+      authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
+      final ExecutionContext context,
+      @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "pullrequests",
+          connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
 
-    request.getBody().ifPresent(body -> context.getLogger().info(body));
+    request.getBody().ifPresent(document::setValue);
 
     return request.createResponseBuilder(HttpStatus.OK).build();
-
   }
+
 }

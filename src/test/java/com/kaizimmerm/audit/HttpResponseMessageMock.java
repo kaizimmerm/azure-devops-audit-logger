@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.kaizimmerm.git;
+package com.kaizimmerm.audit;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -62,7 +62,7 @@ steps:
       azureSubscription: 'AzureKaizimmerm'
       appType: functionAppLinux      
       resourceGroupName: ${{ parameters.functionResourceGroup }}
-      appName: ${{ parameters.functionName }}
+      appName: ${{ parameters.functionName }}      
       package: $(System.DefaultWorkingDirectory)/target/azure-functions/${{ parameters.functionName }}
   - task: SonarCloudPublish@1
     displayName: 'Publish results on build summary'

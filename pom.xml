@@ -48,8 +48,9 @@
         <azure.functions.maven.plugin.version>1.9.0</azure.functions.maven.plugin.version>
         <azure.functions.java.library.version>1.4.0</azure.functions.java.library.version>
         <functionAppName>azure-devops-audit-logger</functionAppName>
-        <stagingDirectory>${project.build.directory}/azure-functions/${functionAppName}</stagingDirectory>
         <functionAppResourceGroup>kaizimmerm</functionAppResourceGroup>
+        <functionAppServicePlanName>java-functions-app-service-plan</functionAppServicePlanName>
+        <stagingDirectory>${project.build.directory}/azure-functions/${functionAppName}</stagingDirectory>
     </properties>
 
     <dependencies>
@@ -97,7 +98,7 @@
                     <!-- function app resource group -->
                     <resourceGroup>${functionAppResourceGroup}</resourceGroup>
                     <!-- function app service plan name -->
-                    <appServicePlanName>java-functions-app-service-plan</appServicePlanName>
+                    <appServicePlanName>${functionAppServicePlanName}</appServicePlanName>
                     <!-- function app region-->
                     <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-regions for all valid values -->
                     <region>westeurope</region>
