@@ -64,7 +64,7 @@ class FunctionTest {
     final OutputBinding<String> output = mock(OutputBinding.class);
 
     // Invoke
-    final HttpResponseMessage ret = new Function().pullrequests(req, context, output);
+    final HttpResponseMessage ret = new Function().storepullrequest(req, context, output);
 
     // Verify
     verify(output).setValue(eq(testBody));

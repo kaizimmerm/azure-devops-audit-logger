@@ -16,7 +16,6 @@
 
 package com.kaizimmerm.audit;
 
-import java.util.Optional;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
@@ -24,39 +23,62 @@ import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.azure.functions.OutputBinding;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.CosmosDBInput;
 import com.microsoft.azure.functions.annotation.CosmosDBOutput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
+import java.util.Optional;
 
 /**
  * Azure Functions with HTTP Trigger.
  */
 public class Function {
 
-  @FunctionName("pullrequests")
-  public HttpResponseMessage pullrequests(@HttpTrigger(name = "request",
+  @FunctionName("storepullrequest")
+  public HttpResponseMessage storepullrequest(@HttpTrigger(name = "request",
       methods = {HttpMethod.POST},
+      route = "pullrequests",
       authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context,
       @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "pullrequests",
           connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
 
-    request.getBody().ifPresent(body -> {
-      context.getLogger().info(body);
-      document.setValue(body);
-    });
-
-    return request.createResponseBuilder(HttpStatus.OK).build();
+    return processStoreRequest(request, context, document);
   }
 
-  @FunctionName("workitems")
-  public HttpResponseMessage workitems(@HttpTrigger(name = "request", methods = {HttpMethod.POST},
+  @FunctionName("getpullrequests")
+  public HttpResponseMessage pullrequests(@HttpTrigger(name = "req", methods = {HttpMethod.GET},
+    route = "pullrequests/{pullRequestId}",
+      authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
+      @CosmosDBInput(name = "database", databaseName = "devops", collectionName = "pullrequests",
+          partitionKey = "{pullRequestId}",
+          connectionStringSetting = "AzureCosmosDBConnection") final String[] items) {
+
+    if (items == null) {
+      request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
+    }
+
+    return request.createResponseBuilder(HttpStatus.OK)
+                          .header("Content-Type", "application/json")
+                          .body(items)
+                          .build();
+  }
+
+  @FunctionName("storeworkitem")
+  public HttpResponseMessage storeworkitem(@HttpTrigger(name = "request",
+      methods = {HttpMethod.POST},
+      route = "workitems",
       authLevel = AuthorizationLevel.FUNCTION) final HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context,
       @CosmosDBOutput(name = "database", databaseName = "devops", collectionName = "workitems",
           connectionStringSetting = "AzureCosmosDBConnection") final OutputBinding<String> document) {
 
+    return processStoreRequest(request, context, document);
+  }
 
+  private static HttpResponseMessage processStoreRequest(
+      final HttpRequestMessage<Optional<String>> request, final ExecutionContext context,
+      final OutputBinding<String> document) {
     request.getBody().ifPresent(body -> {
       context.getLogger().info(body);
       document.setValue(body);
