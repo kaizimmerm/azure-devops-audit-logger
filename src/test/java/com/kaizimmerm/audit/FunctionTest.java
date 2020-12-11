@@ -16,40 +16,38 @@
 
 package com.kaizimmerm.audit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Logger;
-import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.verify;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
+import com.microsoft.azure.functions.OutputBinding;
+import java.util.Optional;
+import java.util.logging.Logger;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 
 /**
  * Unit test for Function class.
  */
 class FunctionTest {
-  /**
-   * Unit test for HttpTriggerJava method.
-   */
+  @SuppressWarnings("unchecked")
   @Test
   void testHttpTriggerJava() throws Exception {
     // Setup
-    @SuppressWarnings("unchecked")
+
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
 
-    final Map<String, String> queryParams = new HashMap<>();
-    queryParams.put("name", "Azure");
-    doReturn(queryParams).when(req).getQueryParameters();
+    final String testBody = "teststring";
 
-    final Optional<String> queryBody = Optional.empty();
+    final Optional<String> queryBody = Optional.of(testBody);
     doReturn(queryBody).when(req).getBody();
 
     doAnswer(invocation -> {
@@ -60,10 +58,16 @@ class FunctionTest {
     final ExecutionContext context = mock(ExecutionContext.class);
     doReturn(Logger.getGlobal()).when(context).getLogger();
 
+    final ArgumentCaptor<OutputBinding<String>> endpointCreateCaptor =
+        ArgumentCaptor.forClass(OutputBinding.class);
+
+    final OutputBinding<String> output = mock(OutputBinding.class);
+
     // Invoke
-    final HttpResponseMessage ret = new Function().events(req, context);
+    final HttpResponseMessage ret = new Function().pullrequests(req, context, output);
 
     // Verify
-    assertEquals(ret.getStatus(), HttpStatus.OK);
+    verify(output).setValue(eq(testBody));
+    assertThat(ret.getStatus()).isEqualTo(HttpStatus.OK);
   }
 }
