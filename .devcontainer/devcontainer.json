@@ -18,11 +18,13 @@
 		"azureFunctions.projectLanguage": "Java",
 		"editor.tabSize": 2,
 		"java.format.comments.enabled": false,
+		// VSCode messes up license headers
 		"editor.formatOnSave": false,
+		// Allign with eclipse and Google style
 		"java.completion.importOrder": [
 			"com",
+			"java",
 			"javax",
-			"java",			
 			"org"
 		]
 	},
